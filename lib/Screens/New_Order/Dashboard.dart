@@ -8,39 +8,23 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: Size(360, 690),
-      builder: (context, child) {
-        return MaterialApp(
-          title: 'Flutter Demo',
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            fontFamily: 'Poppins',
-          ),
-          home: MultipleOrdersPage(),
-        );
-      },
-    );
+    return MultipleOrdersPage();
   }
 }
-
 class SingleOrderWidget extends StatefulWidget {
-  final Function onRemove; // Callback to handle order removal
+  final Function onRemove;
+  final Function(double) onFinalPriceChanged;
 
-  SingleOrderWidget({required this.onRemove});
+  SingleOrderWidget({required this.onRemove, required this.onFinalPriceChanged});
 
   @override
   _SingleOrderWidgetState createState() => _SingleOrderWidgetState();
 }
 
 class _SingleOrderWidgetState extends State<SingleOrderWidget> {
-  // Variables for radio button
   String _selectedOption = 'Full Kit';
-
-  // Variables for dropdown selection
   String _selectedFrame = '0.5 Inch Golden';
 
-  // Variables for input fields
   TextEditingController heightController = TextEditingController();
   TextEditingController widthController = TextEditingController();
   TextEditingController advanceController = TextEditingController();
@@ -49,50 +33,47 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
   TextEditingController deliveryDateController = TextEditingController();
   TextEditingController finalPriceController = TextEditingController();
   TextEditingController totalAmountController = TextEditingController();
-  TextEditingController quantityController = TextEditingController(text: '1'); // Default quantity to 1
+  TextEditingController quantityController = TextEditingController(text: '1');
 
-  // Variables for calculated fields
   double totalAmount = 0.0;
   double pendingAmount = 0.0;
 
-  // Checkbox state
   bool _isFinalPriceChecked = true;
 
   @override
   void initState() {
     super.initState();
-    finalPriceController.text = pendingAmount.toStringAsFixed(2);
-    totalAmountController.text = totalAmount.toStringAsFixed(2);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      finalPriceController.text = pendingAmount.toStringAsFixed(2);
+      widget.onFinalPriceChanged(double.tryParse(finalPriceController.text) ?? 0.0);
+    });
   }
 
-  // Function to calculate total amount
+  void _updateFinalPrice(double price) {
+    widget.onFinalPriceChanged(price);
+  }
+
   void calculateTotalAmount() {
     double height = double.tryParse(heightController.text) ?? 0.0;
     double width = double.tryParse(widthController.text) ?? 0.0;
     int quantity = int.tryParse(quantityController.text) ?? 1;
 
-    totalAmount = (height * width) * 10 * quantity; // Replace '10' with actual factor
-    totalAmountController.text = totalAmount.toStringAsFixed(2);
-    calculatePendingAmount();
+    setState(() {
+      totalAmount = (height * width) * 10 * quantity;
+      totalAmountController.text = totalAmount.toStringAsFixed(2);
+      calculatePendingAmount();
+    });
   }
 
-  // Function to calculate pending amount
   void calculatePendingAmount() {
     double advanceAmount = double.tryParse(advanceController.text) ?? 0.0;
     setState(() {
       pendingAmount = totalAmount - advanceAmount;
       if (_isFinalPriceChecked) {
         finalPriceController.text = pendingAmount.toStringAsFixed(2);
+        _updateFinalPrice(pendingAmount);
       }
     });
-  }
-
-  void _onSubmit() {
-    print('Submit clicked');
-  }
-
-  void _onCancel() {
-    print('Cancel clicked');
   }
 
   @override
@@ -105,7 +86,6 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Radio buttons for options
             Text(
               'Select Option',
               style: TextStyle(
@@ -115,7 +95,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
               ),
             ),
             Column(
-              children: ['Full Kit', 'Only Frame', 'Frame with Glass', 'Only Glass']
+              children: ['Full Kit', 'Only Frame', 'Frame with Glass', 'Only Glass', 'Plastic Lamination']
                   .map((option) => RadioListTile<String>(
                 title: Text(option, style: TextStyle(fontSize: 10.sp, fontFamily: 'Poppins')),
                 value: option,
@@ -123,14 +103,15 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
                 onChanged: (value) {
                   setState(() {
                     _selectedOption = value!;
+                    if (_selectedOption == 'Only Glass') {
+                      _selectedFrame = '0.5 Inch Golden';
+                    }
                   });
                 },
               ))
                   .toList(),
             ),
             SizedBox(height: 16.h),
-
-            // Dropdown for frame selection
             Text(
               'Select Frame',
               style: TextStyle(
@@ -160,7 +141,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
                   ),
                 );
               }).toList(),
-              onChanged: _selectedOption == 'Only Glass'
+              onChanged: (_selectedOption == 'Only Glass' || _selectedOption == 'Plastic Lamination')
                   ? null
                   : (newValue) {
                 setState(() {
@@ -168,9 +149,8 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
                 });
               },
             ),
-            SizedBox(height: 16.h),
 
-            // Measurement fields
+            SizedBox(height: 16.h),
             Text(
               'Measurements',
               style: TextStyle(
@@ -189,7 +169,10 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: 'Height (Inches)',
-                        labelStyle: TextStyle(fontFamily: 'Poppins'),
+                        labelStyle: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12.sp, // Adjust this value to make the font smaller or larger
+                        ),
                         border: OutlineInputBorder(),
                         contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                       ),
@@ -205,7 +188,10 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: 'Width (Inches)',
-                        labelStyle: TextStyle(fontFamily: 'Poppins'),
+                        labelStyle: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12.sp, // Adjust this value to make the font smaller or larger
+                        ),
                         border: OutlineInputBorder(),
                         contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                       ),
@@ -216,8 +202,6 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
               ],
             ),
             SizedBox(height: 16.h),
-
-            // Quantity field
             TextField(
               controller: quantityController,
               keyboardType: TextInputType.number,
@@ -230,8 +214,6 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
               onChanged: (value) => calculateTotalAmount(),
             ),
             SizedBox(height: 16.h),
-
-            // Payment Fields
             Padding(
               padding: EdgeInsets.only(top: 10, bottom: 10),
               child: Text(
@@ -254,50 +236,37 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
               enabled: false,
             ),
             SizedBox(height: 16.h),
-
             TextField(
               controller: advanceController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'Advance Amount',
-                labelStyle: TextStyle(fontFamily: 'Poppins'),
+                labelStyle: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12.sp, // Adjust this value to make the font smaller or larger
+                ),
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               ),
               onChanged: (value) => calculatePendingAmount(),
             ),
             SizedBox(height: 16.h),
-
-            Text(
-              'Pending Amount - \$${pendingAmount.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
-              ),
-            ),
-            SizedBox(height: 16.h),
-
-            // Checkbox for final price
             CheckboxListTile(
-              title: Text(
-                'Is Final Price Same as Calculated Price \$${pendingAmount.toStringAsFixed(2)}',
-                style: TextStyle(fontFamily: 'Poppins'),
-              ),
+              title: Text('Final Price Same as Pending Amount', style: TextStyle(fontFamily: 'Poppins')),
               value: _isFinalPriceChecked,
-              onChanged: (bool? value) {
+              onChanged: (value) {
                 setState(() {
-                  _isFinalPriceChecked = value ?? true;
+                  _isFinalPriceChecked = value!;
                   if (_isFinalPriceChecked) {
                     finalPriceController.text = pendingAmount.toStringAsFixed(2);
                   } else {
                     finalPriceController.clear();
                   }
+                  _updateFinalPrice(double.tryParse(finalPriceController.text) ?? 0.0);
                 });
               },
             ),
             SizedBox(height: 16.h),
-
             TextField(
               controller: finalPriceController,
               keyboardType: TextInputType.number,
@@ -308,33 +277,12 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
                 contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               ),
               enabled: !_isFinalPriceChecked,
+              onChanged: (value) {
+                double finalPrice = double.tryParse(value) ?? 0.0;
+                _updateFinalPrice(finalPrice);
+              },
             ),
             SizedBox(height: 16.h),
-
-            // Submit and Cancel buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: _onSubmit,
-                  child: Text('Submit', style: TextStyle(fontFamily: 'Poppins')),
-                  style: ElevatedButton.styleFrom(
-                    primary: Theme.of(context).primaryColor,
-                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: _onCancel,
-                  child: Text('Cancel', style: TextStyle(fontFamily: 'Poppins')),
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.red,
-                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                  ),
-                ),
-              ],
-            ),
-
-            // Remove button to delete this order widget
             Align(
               alignment: Alignment.centerRight,
               child: IconButton(
@@ -355,7 +303,8 @@ class MultipleOrdersPage extends StatefulWidget {
 }
 
 class _MultipleOrdersPageState extends State<MultipleOrdersPage> {
-  List<Widget> _orders = [];
+  List<SingleOrderWidget> _orders = [];
+  List<double> _finalPrices = [];
 
   @override
   void initState() {
@@ -368,11 +317,40 @@ class _MultipleOrdersPageState extends State<MultipleOrdersPage> {
       _orders.add(SingleOrderWidget(
         onRemove: () {
           setState(() {
-            _orders.removeLast(); // Remove the last added order
+            int index = _orders.indexOf(_orders.last);
+            if (index >= 0) {
+              _orders.removeAt(index); // Remove the last added order
+              _finalPrices.removeAt(index); // Remove the last final price
+            }
           });
+        },
+        onFinalPriceChanged: (price) {
+          int index = _orders.indexOf(_orders.last);
+          if (index >= 0) {
+            if (index < _finalPrices.length) {
+              _finalPrices[index] = price;
+            } else {
+              _finalPrices.add(price);
+            }
+            setState(() {}); // Trigger rebuild to update grand total
+          }
         },
       ));
     });
+  }
+
+  double get _grandTotal {
+    return _finalPrices.fold(0.0, (sum, price) => sum + price);
+  }
+
+  void _onSubmit() {
+    // Handle submit logic here
+    print('Submit clicked');
+  }
+
+  void _onCancel() {
+    // Handle cancel logic here
+    print('Cancel clicked');
   }
 
   @override
@@ -381,17 +359,59 @@ class _MultipleOrdersPageState extends State<MultipleOrdersPage> {
       appBar: AppBar(
         title: Text('Multiple Orders'),
       ),
-      body: ListView(
-        padding: EdgeInsets.all(16.0.w),
+      body: Column(
         children: [
-          ..._orders,
-          SizedBox(height: 16.h),
-          ElevatedButton(
-            onPressed: _addOrder,
-            child: Text('Add Another Order'),
-            style: ElevatedButton.styleFrom(
-              primary: Theme.of(context).primaryColor,
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.all(16.0.w),
+              children: [
+                ..._orders,
+                SizedBox(height: 16.h),
+                Padding(
+                  padding: EdgeInsets.all(16.0.w),
+                  child: Text(
+                    'Grand Total: ₹${_grandTotal.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                ElevatedButton(
+                  onPressed: _addOrder,
+                  child: Text('Add Another Order'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(16.0.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: _onSubmit,
+                        child: Text('Submit', style: TextStyle(fontFamily: 'Poppins')),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: _onCancel,
+                        child: Text('Cancel', style: TextStyle(fontFamily: 'Poppins')),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],

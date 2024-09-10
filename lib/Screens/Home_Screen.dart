@@ -15,10 +15,12 @@ class HomeScreen extends StatelessWidget {
 
     // List of box names with unique labels, corresponding routes, and icons
     final List<Map<String, dynamic>> boxData = [
-      {'name': 'New Order', 'route': MultipleOrdersPage(), 'icon': Icons.add_shopping_cart},
+      {'name': 'New Order', 'route': MyApp(), 'icon': Icons.add_shopping_cart},
       {'name': 'Lock Stock', 'route': LockStockPage(), 'icon': Icons.lock},
       {'name': 'Frame Stock', 'route': FrameStockPage(), 'icon': Icons.filter_frames},
       {'name': 'Photo Stock', 'route': PhotoStockPage(), 'icon': Icons.photo_library},
+      {'name': 'Track Orders', 'route': PhotoStockPage(), 'icon': Icons.task_rounded},
+      {'name': 'Update Data', 'route': PhotoStockPage(), 'icon': Icons.query_stats},
     ];
 
     return Scaffold(
@@ -43,7 +45,7 @@ class HomeScreen extends StatelessWidget {
           crossAxisCount: 2, // Two boxes per row
           crossAxisSpacing: 16.w, // Space between columns
           mainAxisSpacing: 16.h, // Space between rows
-          children: List.generate(4, (index) { // Generates four boxes
+          children: List.generate(6, (index) { // Generates four boxes
             return GestureDetector(
               onTap: () {
                 Navigator.push(
