@@ -15,7 +15,7 @@ class HomeScreen extends StatelessWidget {
 
     // List of box names with unique labels, corresponding routes, and icons
     final List<Map<String, dynamic>> boxData = [
-      {'name': 'New Order', 'route': NewOrderPage(), 'icon': Icons.add_shopping_cart},
+      {'name': 'New Order', 'route': MultipleOrdersPage(), 'icon': Icons.add_shopping_cart},
       {'name': 'Lock Stock', 'route': LockStockPage(), 'icon': Icons.lock},
       {'name': 'Frame Stock', 'route': FrameStockPage(), 'icon': Icons.filter_frames},
       {'name': 'Photo Stock', 'route': PhotoStockPage(), 'icon': Icons.photo_library},
