@@ -23,13 +23,10 @@ class _FrameStockPageState extends State<FrameStockPage> {
 
   void _showEditDialog(Frame frame) {
     final petNameController = TextEditingController(text: frame.FramePetName);
-    final actualNameController =
-        TextEditingController(text: frame.FrameActualName);
+    final actualNameController = TextEditingController(text: frame.FrameActualName);
     final sizeController = TextEditingController(text: frame.size.toString());
-    final priceController =
-        TextEditingController(text: frame.unitPrice.toString());
-    final stockController =
-        TextEditingController(text: frame.totalStock.toString());
+    final priceController = TextEditingController(text: frame.unitPrice.toString());
+    final stockController = TextEditingController(text: frame.totalStock.toString());
 
     showDialog(
       context: context,
@@ -90,6 +87,84 @@ class _FrameStockPageState extends State<FrameStockPage> {
     );
   }
 
+  void _showAddDialog() {
+    final petNameController = TextEditingController();
+    final actualNameController = TextEditingController();
+    final sizeController = TextEditingController();
+    final priceController = TextEditingController();
+    final stockController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add New Frame'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: petNameController,
+                decoration: InputDecoration(labelText: 'Frame Pet Name'),
+              ),
+              TextField(
+                controller: actualNameController,
+                decoration: InputDecoration(labelText: 'Frame Actual Name'),
+              ),
+              TextField(
+                controller: sizeController,
+                decoration: InputDecoration(labelText: 'Size'),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+              ),
+              TextField(
+                controller: priceController,
+                decoration: InputDecoration(labelText: 'Price'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: stockController,
+                decoration: InputDecoration(labelText: 'Stock'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  int newFrameID = frames.length + 1;
+                  frames.add(
+                    Frame(
+                      FrameID: newFrameID,
+                      FramePetName: petNameController.text,
+                      FrameActualName: actualNameController.text,
+                      size: double.parse(sizeController.text),
+                      unitPrice: int.parse(priceController.text),
+                      totalStock: int.parse(stockController.text),
+                    ),
+                  );
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text('Add'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteFrame(Frame frame) {
+    setState(() {
+      frames.remove(frame);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -108,170 +183,190 @@ class _FrameStockPageState extends State<FrameStockPage> {
         ),
         centerTitle: true,
       ),
-      body: ListView(children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          child: Center(
-            child: Text(
-              "Price List of Frame",
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                color: themeProvider.textColor,
-              ),
-            ),
-          ),
-        ),
-        Center(
-          child: Padding(
+      body: ListView(
+        children: [
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: themeProvider.primaryColor,
-                    width: 1.w,
-                  ),
-                  borderRadius: BorderRadius.circular(8.w),
-                ),
-                child: DataTable(
-                  columnSpacing: 10.w,
-                  headingRowHeight: 40.h,
-                  dataRowHeight: 48.h,
-                  columns: [
-                    DataColumn(
-                      label: Center(
-                        child: Text(
-                          'Name',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Center(
-                        child: Text(
-                          'Size',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Center(
-                        child: Text(
-                          'Price',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Center(
-                        child: Text(
-                          'Stock',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Center(
-                        child: Text(
-                          'Edit',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  rows: frames.map((frame) {
-                    return DataRow(
-                      cells: [
-                        DataCell(
-                          Center(
-                            child: Text(
-                              frame.FramePetName,
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: themeProvider.textColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Center(
-                            child: Text(
-                              frame.size.toString(),
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: themeProvider.textColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Center(
-                            child: Text(
-                              '₹${frame.unitPrice}',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: themeProvider.textColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Center(
-                            child: Text(
-                              frame.totalStock.toString(),
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: themeProvider.textColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Center(
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.edit,
-                                color: themeProvider.primaryColor,
-                                size: 18.sp,
-                              ),
-                              onPressed: () {
-                                _showEditDialog(frame);
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+            child: Center(
+              child: Text(
+                "Price List of Frame",
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.underline,
+                  color: themeProvider.textColor,
                 ),
               ),
             ),
           ),
-        ),
-      ]),
+          Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: themeProvider.primaryColor,
+                      width: 1.w,
+                    ),
+                    borderRadius: BorderRadius.circular(8.w),
+                  ),
+                  child: DataTable(
+                    columnSpacing: 10.w,
+                    headingRowHeight: 40.h,
+                    dataRowHeight: 48.h,
+                    columns: [
+                      DataColumn(
+                        label: Center(
+                          child: Text(
+                            'Name',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.textColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Center(
+                          child: Text(
+                            'Size',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.textColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Center(
+                          child: Text(
+                            'Price',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.textColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Center(
+                          child: Text(
+                            'Stock',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.textColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Center(
+                          child: Text(
+                            'Actions',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.textColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    rows: frames.map((frame) {
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Center(
+                              child: Text(
+                                frame.FramePetName,
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: themeProvider.textColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Center(
+                              child: Text(
+                                frame.size.toString(),
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: themeProvider.textColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Center(
+                              child: Text(
+                                '₹${frame.unitPrice}',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: themeProvider.textColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Center(
+                              child: Text(
+                                frame.totalStock.toString(),
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: themeProvider.textColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.edit,
+                                    color: themeProvider.primaryColor,
+                                    size: 18.sp,
+                                  ),
+                                  onPressed: () {
+                                    _showEditDialog(frame);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.delete,
+                                    color: themeProvider.primaryColor,
+                                    size: 18.sp,
+                                  ),
+                                  onPressed: () {
+                                    _deleteFrame(frame);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddDialog,
+        backgroundColor: themeProvider.primaryColor,
+        child: Icon(Icons.add, color: themeProvider.textColor),
+      ),
     );
   }
 }
