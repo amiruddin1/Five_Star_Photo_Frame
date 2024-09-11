@@ -1,4 +1,5 @@
 import 'package:five_star_photo_framing/Screens/Photo_Stock/PhotosCatalog.dart';
+import 'package:five_star_photo_framing/models/DBHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +12,24 @@ class PhotoStockPage extends StatefulWidget {
 
 class _PhotoStockPageState extends State<PhotoStockPage> {
   List<String> rowValues = ['5x7', '9x12', '12x16', '12x18', '16x24'];
+  Map<String, int> photoCounts = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPhotoCounts(); // Fetch photo counts when the page initializes
+  }
+
+  Future<void> _loadPhotoCounts() async {
+    Map<String, int> counts = {};
+    for (String size in rowValues) {
+      int count = await DBHelperClass.instance.getPhotoCountBySize(size) ?? 0; // Ensure count is not null
+      counts[size] = count;
+    }
+    setState(() {
+      photoCounts = counts;
+    });
+  }
 
   void _showAddRowDialog() {
     String newValue = ''; // Variable to store the user input
@@ -40,6 +59,7 @@ class _PhotoStockPageState extends State<PhotoStockPage> {
                 if (newValue.isNotEmpty) {
                   setState(() {
                     rowValues.add(newValue); // Add new value to the list
+                    photoCounts[newValue] = 0; // Initialize the count for new size
                   });
                   Navigator.of(context).pop(); // Close the dialog
                 }
@@ -104,7 +124,7 @@ class _PhotoStockPageState extends State<PhotoStockPage> {
                 ),
               ),
               child: Text(
-                'Add Row',
+                'Add More Size',
                 style: TextStyle(
                   fontSize: 16.sp,
                   color: themeProvider.textColor,
@@ -119,6 +139,8 @@ class _PhotoStockPageState extends State<PhotoStockPage> {
   }
 
   Widget _buildRow(String value, ThemeProvider themeProvider) {
+    int count = photoCounts[value] ?? 0;
+
     return Container(
       width: double.infinity, // Full width of the screen
       margin: EdgeInsets.symmetric(vertical: 8.h),
@@ -144,7 +166,7 @@ class _PhotoStockPageState extends State<PhotoStockPage> {
             ),
           ),
           Text(
-            '79', // Display the random number
+            '$count', // Display the dynamic count
             style: TextStyle(
               fontSize: 16.sp,
               color: themeProvider.textColor,

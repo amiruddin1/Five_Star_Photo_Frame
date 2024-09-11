@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import '../models/theme_provider.dart'; // Import the ThemeProvider
+import '../models/theme_provider.dart';
 import './New_Order/Dashboard.dart';
 import './Lock_Stock/Dashboard.dart';
 import './Frame_Stock/Dashboard.dart';

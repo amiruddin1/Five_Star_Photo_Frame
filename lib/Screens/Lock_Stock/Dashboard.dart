@@ -1,3 +1,4 @@
+import 'package:five_star_photo_framing/models/DBHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -10,27 +11,40 @@ class LockStockPage extends StatefulWidget {
 }
 
 class _LockStockPageState extends State<LockStockPage> {
-  List<Lock> locks = List.generate(20, (index) {
-    return Lock(
-      serialNumber: index + 1,
-      lockName: 'Lock ${index + 1}',
-      unitPrice: 50 + (index * 10),
-      mm: 25 + (index * 5),
-      totalStock: 100 - (index * 5),
-    );
-  });
+  List<Lock> locks = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocks();
+  }
+
+  Future<void> _loadLocks() async {
+    List<Map<String, dynamic>> locksFromDb = await DBHelperClass.instance.getAllRecords(DBHelperClass.TBLLock);
+    setState(() {
+      locks = locksFromDb.map((lock) {
+        return Lock(
+          LockId: lock[DBHelperClass.LockId],
+          LockName: lock[DBHelperClass.LockName],
+          UnitPrice: lock[DBHelperClass.LockUnitPrice],
+          MM: lock[DBHelperClass.LockMM],
+          TotalStock: lock[DBHelperClass.LockTotalStock],
+        );
+      }).toList();
+    });
+  }
 
   void _showEditDialog(Lock lock) {
-    final nameController = TextEditingController(text: lock.lockName);
-    final mmController = TextEditingController(text: lock.mm.toString());
-    final priceController = TextEditingController(text: lock.unitPrice.toString());
-    final stockController = TextEditingController(text: lock.totalStock.toString());
+    final nameController = TextEditingController(text: lock.LockName);
+    final mmController = TextEditingController(text: lock.MM.toString());
+    final priceController = TextEditingController(text: lock.UnitPrice.toString());
+    final stockController = TextEditingController(text: lock.TotalStock.toString());
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit Lock ${lock.serialNumber}'),
+          title: Text('Edit Lock ${lock.LockId}'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -57,13 +71,19 @@ class _LockStockPageState extends State<LockStockPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                setState(() {
-                  lock.lockName = nameController.text;
-                  lock.mm = int.parse(mmController.text);
-                  lock.unitPrice = int.parse(priceController.text);
-                  lock.totalStock = int.parse(stockController.text);
-                });
+              onPressed: () async {
+                await DBHelperClass.instance.updateRecord(
+                  DBHelperClass.TBLLock,
+                  {
+                    DBHelperClass.LockName: nameController.text,
+                    DBHelperClass.LockMM: int.parse(mmController.text),
+                    DBHelperClass.LockUnitPrice: int.parse(priceController.text),
+                    DBHelperClass.LockTotalStock: int.parse(stockController.text),
+                  },
+                  DBHelperClass.LockId,
+                  lock.LockId,
+                );
+                _loadLocks();  // Reload and refresh the list
                 Navigator.of(context).pop();
               },
               child: Text('Save'),
@@ -117,19 +137,17 @@ class _LockStockPageState extends State<LockStockPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                setState(() {
-                  int newSerialNumber = locks.length + 1;
-                  locks.add(
-                    Lock(
-                      serialNumber: newSerialNumber,
-                      lockName: nameController.text,
-                      mm: int.parse(mmController.text),
-                      unitPrice: int.parse(priceController.text),
-                      totalStock: int.parse(stockController.text),
-                    ),
-                  );
-                });
+              onPressed: () async {
+                await DBHelperClass.instance.insertRecord(
+                  DBHelperClass.TBLLock,
+                  {
+                    DBHelperClass.LockName: nameController.text,
+                    DBHelperClass.LockMM: int.parse(mmController.text),
+                    DBHelperClass.LockUnitPrice: int.parse(priceController.text),
+                    DBHelperClass.LockTotalStock: int.parse(stockController.text),
+                  },
+                );
+                _loadLocks();  // Reload and refresh the list
                 Navigator.of(context).pop();
               },
               child: Text('Add'),
@@ -146,11 +164,15 @@ class _LockStockPageState extends State<LockStockPage> {
     );
   }
 
-  void _deleteLock(Lock lock) {
-    setState(() {
-      locks.remove(lock);
-    });
+  void _deleteLock(Lock lock) async {
+    await DBHelperClass.instance.deleteRecord(
+      DBHelperClass.TBLLock,
+      DBHelperClass.LockId,
+      lock.LockId,
+    );
+    _loadLocks();  // Reload and refresh the list
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -171,170 +193,175 @@ class _LockStockPageState extends State<LockStockPage> {
         centerTitle: true,
       ),
       body: Center(
-        child: ListView(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              child: Center(
-                child: Text(
-                  "Price List of Lock",
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                    decoration: TextDecoration.underline,
-                    color: themeProvider.textColor,
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: themeProvider.primaryColor,
-                      width: 1.w,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 80.h),
+          child: ListView(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                child: Center(
+                  child: Text(
+                    "Price List of Lock",
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                      color: themeProvider.textColor,
                     ),
-                    borderRadius: BorderRadius.circular(8.w),
-                  ),
-                  child: DataTable(
-                    columnSpacing: 10.w,
-                    headingRowHeight: 40.h,
-                    dataRowHeight: 48.h,
-                    columns: [
-                      DataColumn(
-                        label: Text(
-                          'No.',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          'Name',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          '(mm)',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          'Price',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          'Stock',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          'Actions',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                    rows: locks.map((lock) {
-                      return DataRow(
-                        cells: [
-                          DataCell(Text(
-                            lock.serialNumber.toString(),
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: themeProvider.textColor,
-                            ),
-                          )),
-                          DataCell(Text(
-                            lock.lockName,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: themeProvider.textColor,
-                            ),
-                          )),
-                          DataCell(Text(
-                            lock.mm.toString(),
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: themeProvider.textColor,
-                            ),
-                          )),
-                          DataCell(Text(
-                            '₹${lock.unitPrice}',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: themeProvider.textColor,
-                            ),
-                          )),
-                          DataCell(Text(
-                            lock.totalStock.toString(),
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: themeProvider.textColor,
-                            ),
-                          )),
-                          DataCell(Row(
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  Icons.edit,
-                                  color: themeProvider.primaryColor,
-                                  size: 18.sp,
-                                ),
-                                onPressed: () {
-                                  _showEditDialog(lock);
-                                },
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                  size: 18.sp,
-                                ),
-                                onPressed: () {
-                                  _deleteLock(lock);
-                                },
-                              ),
-                            ],
-                          )),
-                        ],
-                      );
-                    }).toList(),
                   ),
                 ),
               ),
-            ),
-          ],
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: themeProvider.primaryColor,
+                          width: 1.w,
+                        ),
+                        borderRadius: BorderRadius.circular(8.w),
+                      ),
+                      child: DataTable(
+                        columnSpacing: 10.w,
+                        headingRowHeight: 40.h,
+                        dataRowHeight: 48.h,
+                        columns: [
+                          DataColumn(
+                            label: Text(
+                              'No.',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: themeProvider.textColor,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Name',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: themeProvider.textColor,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              '(mm)',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: themeProvider.textColor,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Price',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: themeProvider.textColor,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Stock',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: themeProvider.textColor,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Actions',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: themeProvider.textColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                        rows: locks.map((lock) {
+                          return DataRow(
+                            cells: [
+                              DataCell(Text(
+                                lock.LockId.toString(),
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: themeProvider.textColor,
+                                ),
+                              )),
+                              DataCell(Text(
+                                lock.LockName,
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: themeProvider.textColor,
+                                ),
+                              )),
+                              DataCell(Text(
+                                lock.MM.toString(),
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: themeProvider.textColor,
+                                ),
+                              )),
+                              DataCell(Text(
+                                '₹${lock.UnitPrice}',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: themeProvider.textColor,
+                                ),
+                              )),
+                              DataCell(Text(
+                                lock.TotalStock.toString(),
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: themeProvider.textColor,
+                                ),
+                              )),
+                              DataCell(Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.edit,
+                                      color: themeProvider.primaryColor,
+                                      size: 18.sp,
+                                    ),
+                                    onPressed: () {
+                                      _showEditDialog(lock);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                      size: 18.sp,
+                                    ),
+                                    onPressed: () {
+                                      _deleteLock(lock);
+                                    },
+                                  ),
+                                ],
+                              )),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

@@ -2,16 +2,18 @@ class Frame {
   int FrameID;
   String FramePetName;
   String FrameActualName;
-  int unitPrice;
-  double size;
-  int totalStock;
+  int UnitPrice;
+  double Size;
+  int TotalStock;
+  String? Color;
 
   Frame({
     required this.FrameID,
     required this.FramePetName,
     required this.FrameActualName,
-    required this.unitPrice,
-    required this.size,
-    required this.totalStock,
+    required this.UnitPrice,
+    required this.Size,
+    required this.TotalStock,
+    required this.Color
   });
 }

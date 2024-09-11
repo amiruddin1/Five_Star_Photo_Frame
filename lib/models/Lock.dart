@@ -1,15 +1,15 @@
 class Lock {
-  int serialNumber;
-  String lockName;
-  int unitPrice;
-  int mm;
-  int totalStock;
+  int LockId;
+  String LockName;
+  int UnitPrice;
+  int MM;
+  int TotalStock;
 
   Lock({
-    required this.serialNumber,
-    required this.lockName,
-    required this.unitPrice,
-    required this.mm,
-    required this.totalStock,
+    required this.LockId,
+    required this.LockName,
+    required this.UnitPrice,
+    required this.MM,
+    required this.TotalStock,
   });
 }
