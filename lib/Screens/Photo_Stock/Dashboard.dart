@@ -11,7 +11,7 @@ class PhotoStockPage extends StatefulWidget {
 }
 
 class _PhotoStockPageState extends State<PhotoStockPage> {
-  List<String> rowValues = ['5x7', '9x12', '12x16', '12x18', '16x24'];
+  List<String> rowValues = ['4x6','5x7', '9x12', '12x16', '12x18', '16x24'];
   Map<String, int> photoCounts = {};
 
   @override

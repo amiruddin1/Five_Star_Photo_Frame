@@ -40,6 +40,15 @@ class DBHelperClass {
   static final PhotoTotalStock = "PhotoTotalStock";
   static final PhotoUnitPrice = "PhotoUnitPrice";
 
+  static final Query = '''
+      INSERT INTO $TBLGod ($GodName, $GodGender) VALUES
+      ('Shiv_Parvati', 'Male'),('Ram_Sita', 'Male'),('Hanuman', 'Male'),('Ganesh', 'Male'),('Krishna', 'Male'),
+      ('Vishnu', 'Male'),('Sai baba', 'Male'),('Brahma', 'Male'),('Saraswati', 'Female'),('Lakshmi', 'Female'),
+      ('Mahakali', 'Female'),('Ambe', 'Female'),('Gayatri', 'Female'),('Dasha maa', 'Female'),('Chamunda maa', 'Female'),
+      ('Vahanvati', 'Female'),('Meldi maa', 'Female'),('Aashapura', 'Female'),('Sarv Mangla', 'Female'),('Khiodiyar', 'Female'),
+      ('Durga', 'Female');
+    ''';
+
   static final DBHelperClass instance = DBHelperClass._init();
   static Database? _database;
 
@@ -108,26 +117,13 @@ class DBHelperClass {
       $PhotoTotalStock INTEGER
     )
   ''');
-
-    await db.execute('''
-    Insert into $TBLGod ($GodName, $GodGender) Values 
-    (Shiv_Parvati, Male), (Ram_Sita, Male), (Hanuman, Male), (Ganesh, Male),(Krishna, Male),(Vishnu, Male),(Sai baba, Male), (Brahma, Male), 
-    (Saraswati, Female), (Lakshmi, Female), (Mahakali, Female), (Ambe, Female), (Gayatri, Female), (Dasha maa, Female), (Chamunda maa, Female),
-    (Vahanvati, Female), (Meldi maa, Female), (Aashapura, Female), (Sarv Mangla, Female), (Khiodiyar, Female), (Durga, Female)     
-  ''');
+    await db.execute(Query);
   }
 
   ///things to remove
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute('''
-      INSERT INTO $TBLGod ($GodName, $GodGender) VALUES
-      ('Shiv_Parvati', 'Male'),('Ram_Sita', 'Male'),('Hanuman', 'Male'),('Ganesh', 'Male'),('Krishna', 'Male'),
-      ('Vishnu', 'Male'),('Sai baba', 'Male'),('Brahma', 'Male'),('Saraswati', 'Female'),('Lakshmi', 'Female'),
-      ('Mahakali', 'Female'),('Ambe', 'Female'),('Gayatri', 'Female'),('Dasha maa', 'Female'),('Chamunda maa', 'Female'),
-      ('Vahanvati', 'Female'),('Meldi maa', 'Female'),('Aashapura', 'Female'),('Sarv Mangla', 'Female'),('Khiodiyar', 'Female'),
-      ('Durga', 'Female');
-    ''');
+      await db.execute(Query);
     }
     // Add more migrations as needed
   }
@@ -176,6 +172,13 @@ class DBHelperClass {
       'SELECT SUM($PhotoTotalStock) as total FROM $TBLPhotos WHERE $PhotoSize = ?',
       [size],
     );
-    return result.isNotEmpty ? result.first['total'] as int : 0;
+
+    // Safely handle possible null value for 'total'
+    int totalCount = result.isNotEmpty && result.first['total'] != null
+        ? result.first['total'] as int
+        : 0;
+
+    return totalCount;
   }
+
 }

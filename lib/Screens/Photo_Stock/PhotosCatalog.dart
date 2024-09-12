@@ -3,8 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../models/theme_provider.dart';
 import '../../models/DBHelper.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
 class PhotosCatalogPage extends StatefulWidget {
   final String selectedRow;
@@ -17,12 +15,32 @@ class PhotosCatalogPage extends StatefulWidget {
 
 class _PhotosCatalogPageState extends State<PhotosCatalogPage> {
   late Future<List<Map<String, dynamic>>> _godRecordsFuture;
+  Future<Map<int, int>>? _godCountsFuture;
 
   @override
   void initState() {
     super.initState();
     _godRecordsFuture = DBHelperClass.instance.getAllRecords(DBHelperClass.TBLGod);
+    _godCountsFuture = _fetchGodCounts(widget.selectedRow);
   }
+
+  Future<Map<int, int>> _fetchGodCounts(String size) async {
+    List<Map<String, dynamic>> photos = await DBHelperClass.instance.getAllRecords(DBHelperClass.TBLPhotos);
+    List<Map<String, dynamic>> gods = await DBHelperClass.instance.getAllRecords(DBHelperClass.TBLGod);
+
+    Map<int, int> godCounts = {for (var god in gods) god[DBHelperClass.GodId] : 0}; // Initialize all counts to 0
+
+    for (var photo in photos) {
+      if (photo[DBHelperClass.PhotoSize] == size) {
+        int godId = photo[DBHelperClass.PhotoGodId];
+        int photoTotalStock = (photo[DBHelperClass.PhotoTotalStock] as int); // Explicit cast to int
+        godCounts[godId] = (godCounts[godId] ?? 0) + photoTotalStock;
+      }
+    }
+
+    return godCounts;
+  }
+
   void _showAddGodDialog() {
     String newGodName = '';
     String newGodGender = 'Male';
@@ -78,6 +96,7 @@ class _PhotosCatalogPageState extends State<PhotosCatalogPage> {
                   );
                   setState(() {
                     _godRecordsFuture = DBHelperClass.instance.getAllRecords(DBHelperClass.TBLGod);
+                    _godCountsFuture = _fetchGodCounts(widget.selectedRow); // Refresh counts
                   });
                   Navigator.of(context).pop();
                 }
@@ -89,7 +108,6 @@ class _PhotosCatalogPageState extends State<PhotosCatalogPage> {
       },
     );
   }
-
 
   void _showEditDialog(int id, String godName, String godGender) {
     String newGodName = godName;
@@ -149,6 +167,7 @@ class _PhotosCatalogPageState extends State<PhotosCatalogPage> {
                   );
                   setState(() {
                     _godRecordsFuture = DBHelperClass.instance.getAllRecords(DBHelperClass.TBLGod);
+                    _godCountsFuture = _fetchGodCounts(widget.selectedRow); // Refresh counts
                   });
                   Navigator.of(context).pop();
                 }
@@ -164,6 +183,7 @@ class _PhotosCatalogPageState extends State<PhotosCatalogPage> {
                 );
                 setState(() {
                   _godRecordsFuture = DBHelperClass.instance.getAllRecords(DBHelperClass.TBLGod);
+                  _godCountsFuture = _fetchGodCounts(widget.selectedRow); // Refresh counts
                 });
                 Navigator.of(context).pop();
               },
@@ -193,27 +213,35 @@ class _PhotosCatalogPageState extends State<PhotosCatalogPage> {
         ),
         centerTitle: true,
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _godRecordsFuture,
+      body: FutureBuilder<Map<int, int>>(
+        future: _godCountsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No gods found.'));
+            return Center(child: Text('No data found.'));
           }
 
-          List<Map<String, dynamic>> records = snapshot.data!;
-          List<String> catalogItems = records
-              .map((record) => '${record[DBHelperClass.GodName]} : 0') // Placeholder count
-              .toList();
+          Map<int, int> godCounts = snapshot.data!;
 
-          return Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Stack(
-              children: [
-                GridView.builder(
+          return FutureBuilder<List<Map<String, dynamic>>>(
+            future: _godRecordsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(child: Text('No gods found.'));
+              }
+
+              List<Map<String, dynamic>> records = snapshot.data!;
+
+              return Padding(
+                padding: EdgeInsets.all(16.w),
+                child: GridView.builder(
                   padding: EdgeInsets.only(bottom: 80.h),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -224,21 +252,23 @@ class _PhotosCatalogPageState extends State<PhotosCatalogPage> {
                   itemCount: records.length,
                   itemBuilder: (context, index) {
                     final record = records[index];
+                    int godId = record[DBHelperClass.GodId];
+                    int count = godCounts[godId] ?? 0; // Use the count from godCounts
+
                     return GestureDetector(
                       onTap: () {
                         _showEditDialog(
-                          record[DBHelperClass.GodId], // Replace with your actual ID
+                          godId,
                           record[DBHelperClass.GodName],
                           record[DBHelperClass.GodGender],
                         );
                       },
-                      child: _buildGridItem('${record[DBHelperClass.GodName]} : 0', themeProvider),
+                      child: _buildGridItem('${record[DBHelperClass.GodName]} : $count', themeProvider),
                     );
                   },
                 ),
-                // Ensure FAB is on top
-              ],
-            ),
+              );
+            },
           );
         },
       ),
