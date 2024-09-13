@@ -7,6 +7,7 @@ class Orders {
   int FinalPrice;
   int Quantity;
   int AdvancePrice;
+  String Status;
 
   Orders(
       {
@@ -17,5 +18,7 @@ class Orders {
         required this.FrameId,
         required this.FinalPrice,
         required this.Quantity,
-        required this.AdvancePrice});
+        required this.AdvancePrice,
+        required this.Status
+      });
     }

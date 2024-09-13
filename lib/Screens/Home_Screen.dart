@@ -22,7 +22,7 @@ class HomeScreen extends StatelessWidget {
       {'name': 'Frame Stock', 'route': FrameStockPage(), 'icon': Icons.filter_frames},
       {'name': 'Photo Stock', 'route': PhotoStockPage(), 'icon': Icons.photo_library},
       {'name': 'Mirror Stock', 'route': MirrorStockPage(), 'icon': Icons.flip_camera_ios},
-      {'name': 'Calculate Price', 'route': PhotoStockPage(), 'icon': Icons.analytics},
+      {'name': 'Calculate Price', 'route': MyApp(), 'icon': Icons.analytics},
       {'name': 'Track Orders', 'route': ManageOrders(), 'icon': Icons.task_rounded},
       {'name': 'Update Data', 'route': UpdateDataPage(), 'icon': Icons.query_stats},
     ];

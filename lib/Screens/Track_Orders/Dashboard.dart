@@ -27,6 +27,75 @@ class _ManageOrdersState extends State<ManageOrders> {
     super.dispose();
   }
 
+  void _showEditStatusDialog(BuildContext context, int orderId, String? currentStatus) {
+    String dropdownValue = (currentStatus == null || currentStatus.toLowerCase() != 'ready') ? 'Pending' : 'Ready';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text('Update Status'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButton<String>(
+                    value: dropdownValue,
+                    items: ['Ready', 'Pending'].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          dropdownValue = newValue; // Use setState to update the dropdown value
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  child: Text('Update Status'),
+                  onPressed: () async {
+                    // Call the update method and close the dialog
+                    await _updateOrderStatus(orderId, dropdownValue);
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+  Future<void> _updateOrderStatus(int orderId, String newStatus) async {
+    final row = {'Status': newStatus}; // Update status data
+    int updated = await DBHelperClass.instance.updateRecord(
+        DBHelperClass.TBLOrders, row, 'Order_Id', orderId);
+
+    if (updated > 0) {
+      setState(() {
+        _ordersFuture = DBHelperClass.instance.getAllRecords(DBHelperClass.TBLOrders); // Refresh orders
+      });
+    } else {
+      print('Failed to update status');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -192,6 +261,30 @@ class _ManageOrdersState extends State<ManageOrders> {
                                       ),
                                     ),
                                   ),
+                                  DataColumn(
+                                    label: Center(
+                                      child: Text(
+                                        'Status',
+                                        style: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: themeProvider.textColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Center(
+                                      child: Text(
+                                        'Actions',
+                                        style: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: themeProvider.textColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                                 rows: orders.map((order) {
                                   // Determine the value for the 'Frame' column based on the condition
@@ -274,6 +367,32 @@ class _ManageOrdersState extends State<ManageOrders> {
                                               color: themeProvider.textColor,
                                             ),
                                           ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Center(
+                                          child: Text(
+                                            (order['Status'] == null || order['Status'].toString().toLowerCase() != 'ready')
+                                                ? 'Pending'
+                                                : 'Completed',
+                                            style: TextStyle(
+                                              fontSize: 14.sp,
+                                              color: themeProvider.textColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(Icons.edit, color: themeProvider.primaryColor),
+                                              onPressed: () {
+                                                _showEditStatusDialog(context, order['Order_Id'], order['Status']);
+                                              },
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],

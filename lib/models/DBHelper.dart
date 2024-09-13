@@ -49,6 +49,7 @@ class DBHelperClass {
   static final FinalPrice = "FinalPrice";
   static final Quantity = "Quantity";
   static final AdvancePrice = "AdvancePrice";
+  static final Status = "Status";
 
   static final Query = '''
       INSERT INTO $TBLGod ($GodName, $GodGender) VALUES
@@ -88,7 +89,7 @@ class DBHelperClass {
 
   Future<Database> _initDatabase() async {
     final String path = join(await getDatabasesPath(), 'FiveStarPhotoFrame');
-    return openDatabase(path, version: 4, onCreate: _onCreate,onUpgrade: _upgradeDB); //Version will be 1 here
+    return openDatabase(path, version: 5, onCreate: _onCreate,onUpgrade: _upgradeDB); //Version will be 1 here
   }
 
   Future _onCreate(var db, int version) async {
@@ -143,16 +144,6 @@ class DBHelperClass {
   ''');
 
     await db.execute('''
-    CREATE TABLE $TBLPhotos (
-      $PhotoId INTEGER PRIMARY KEY AUTOINCREMENT,
-      $PhotoGodId INTEGER REFERENCES $TBLGod($GodId),
-      $PhotoSize TEXT,
-      $PhotoUnitPrice INTEGER,
-      $PhotoTotalStock INTEGER
-    )
-  ''');
-
-    await db.execute('''
         CREATE TABLE $TBLOrders (
           $Order_Id INTEGER PRIMARY KEY AUTOINCREMENT,
           $FrameIdFK INTEGER,
@@ -161,7 +152,8 @@ class DBHelperClass {
           $Height TEXT,
           $FinalPrice DOUBLE,
           $Quantity INTEGER,
-          $AdvancePrice INTEGER
+          $AdvancePrice INTEGER,
+          $Status Text
         )
       ''');
     await db.execute(Query);
@@ -172,18 +164,6 @@ class DBHelperClass {
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
       await db.execute(Query2);
 
-      await db.execute('''
-        CREATE TABLE $TBLOrders (
-          $Order_Id INTEGER PRIMARY KEY AUTOINCREMENT,
-          $FrameIdFK INTEGER,
-          $ServiceType TEXT,
-          $Width TEXT,
-          $Height TEXT,
-          $FinalPrice DOUBLE,
-          $Quantity INTEGER,
-          $AdvancePrice INTEGER
-        )
-      ''');
   }
 
   /// remove upto this
