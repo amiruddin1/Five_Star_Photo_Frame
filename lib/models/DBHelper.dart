@@ -89,7 +89,7 @@ class DBHelperClass {
 
   Future<Database> _initDatabase() async {
     final String path = join(await getDatabasesPath(), 'FiveStarPhotoFrame');
-    return openDatabase(path, version: 5, onCreate: _onCreate,onUpgrade: _upgradeDB); //Version will be 1 here
+    return openDatabase(path, version: 1, onCreate: _onCreate,onUpgrade: _upgradeDB); //Version will be 1 here
   }
 
   Future _onCreate(var db, int version) async {
