@@ -1,6 +1,7 @@
 import 'package:five_star_photo_framing/Screens/Frame_Stock/Dashboard.dart';
 import 'package:five_star_photo_framing/Screens/Lock_Stock/Dashboard.dart';
 import 'package:five_star_photo_framing/Screens/Mirror_Stock/Dashboard.dart';
+import 'package:five_star_photo_framing/Screens/Track_Orders/Dashboard.dart';
 import 'package:five_star_photo_framing/Screens/UpdateData/UpdatePhotos.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -43,7 +44,7 @@ class UpdateDataPage extends StatelessWidget {
               Navigator.push(context, MaterialPageRoute(builder: (context) => FrameStockPage()));
             }),
             _buildBox(context, 'Order', Icons.receipt_long, themeProvider, () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => FrameStockPage()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ManageOrders()));
             }),
             _buildBox(context, 'Mirror', Icons.receipt_long, themeProvider, () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => MirrorStockPage()));

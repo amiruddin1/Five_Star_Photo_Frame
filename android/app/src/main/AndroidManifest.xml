@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.Amir_Innovates.five_star_photo_framing">
    <application
-        android:label="five_star_photo_framing"
+        android:label="Five Star Photo Framing"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

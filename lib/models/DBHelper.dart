@@ -40,6 +40,16 @@ class DBHelperClass {
   static final PhotoTotalStock = "PhotoTotalStock";
   static final PhotoUnitPrice = "PhotoUnitPrice";
 
+  static final TBLOrders = "TBLOrders";
+  static final Order_Id = "Order_Id";
+  static final ServiceType = "ServiceType";
+  static final FrameIdFK = "FrameIdFK";
+  static final Width = "Width";
+  static final Height = "Height";
+  static final FinalPrice = "FinalPrice";
+  static final Quantity = "Quantity";
+  static final AdvancePrice = "AdvancePrice";
+
   static final Query = '''
       INSERT INTO $TBLGod ($GodName, $GodGender) VALUES
       ('Shiv_Parvati', 'Male'),('Ram_Sita', 'Male'),('Hanuman', 'Male'),('Ganesh', 'Male'),('Krishna', 'Male'),
@@ -47,6 +57,20 @@ class DBHelperClass {
       ('Mahakali', 'Female'),('Ambe', 'Female'),('Gayatri', 'Female'),('Dasha maa', 'Female'),('Chamunda maa', 'Female'),
       ('Vahanvati', 'Female'),('Meldi maa', 'Female'),('Aashapura', 'Female'),('Sarv Mangla', 'Female'),('Khiodiyar', 'Female'),
       ('Durga', 'Female');
+    ''';
+
+  static final Query2 = '''
+      INSERT INTO $TBLFrame ($FramePName, $FrameAName, $FrameUnitPrice, $FrameSize, $FrameTotalStock, $FrameColor) VALUES
+      ('0.5 Gold', 'IDK', '55','0.50','1','Gold'),
+      ('0.75 Gold', 'IDK', '60','0.75','1','Gold'),
+      ('1 Gold', 'IDK', '70','1','1','Gold'),
+      ('1.5 Gold', 'IDK', '85','1.5','1','Gold'),
+      ('2 Gold', 'IDK', '110','2','1','Gold'),
+      ('0.5 Black', 'IDK', '55','2','1','Black'),
+      ('0.75 Black', 'IDK', '60','0.75','1','Black'),
+      ('1 Black', 'IDK', '70','1','1','Black'),
+      ('1.5 Black', 'IDK', '85','1.5','1','Black'),
+      ('2 Black', 'IDK', '110','2','1','Black')
     ''';
 
   static final DBHelperClass instance = DBHelperClass._init();
@@ -64,7 +88,7 @@ class DBHelperClass {
 
   Future<Database> _initDatabase() async {
     final String path = join(await getDatabasesPath(), 'FiveStarPhotoFrame');
-    return openDatabase(path, version: 2, onCreate: _onCreate,onUpgrade: _upgradeDB); //Version will be 1 here
+    return openDatabase(path, version: 4, onCreate: _onCreate,onUpgrade: _upgradeDB); //Version will be 1 here
   }
 
   Future _onCreate(var db, int version) async {
@@ -117,15 +141,49 @@ class DBHelperClass {
       $PhotoTotalStock INTEGER
     )
   ''');
+
+    await db.execute('''
+    CREATE TABLE $TBLPhotos (
+      $PhotoId INTEGER PRIMARY KEY AUTOINCREMENT,
+      $PhotoGodId INTEGER REFERENCES $TBLGod($GodId),
+      $PhotoSize TEXT,
+      $PhotoUnitPrice INTEGER,
+      $PhotoTotalStock INTEGER
+    )
+  ''');
+
+    await db.execute('''
+        CREATE TABLE $TBLOrders (
+          $Order_Id INTEGER PRIMARY KEY AUTOINCREMENT,
+          $FrameIdFK INTEGER,
+          $ServiceType TEXT,
+          $Width TEXT,
+          $Height TEXT,
+          $FinalPrice DOUBLE,
+          $Quantity INTEGER,
+          $AdvancePrice INTEGER
+        )
+      ''');
     await db.execute(Query);
+    await db.execute(Query2);
   }
 
   ///things to remove
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute(Query);
-    }
-    // Add more migrations as needed
+      await db.execute(Query2);
+
+      await db.execute('''
+        CREATE TABLE $TBLOrders (
+          $Order_Id INTEGER PRIMARY KEY AUTOINCREMENT,
+          $FrameIdFK INTEGER,
+          $ServiceType TEXT,
+          $Width TEXT,
+          $Height TEXT,
+          $FinalPrice DOUBLE,
+          $Quantity INTEGER,
+          $AdvancePrice INTEGER
+        )
+      ''');
   }
 
   /// remove upto this
@@ -179,6 +237,24 @@ class DBHelperClass {
         : 0;
 
     return totalCount;
+  }
+
+  Future<int> getFrameIdBySizeAndColor(String size, String color) async {
+    final db = await instance.database;
+
+    final result = await db.query(
+      TBLFrame,
+      columns: [FrameId],
+      where: '$FrameSize = ? AND $FrameColor = ?',
+      whereArgs: [size, color],
+      limit: 1,
+    );
+
+    if (result.isNotEmpty) {
+      return result.first[FrameId] as int;
+    } else {
+      return 0;
+    }
   }
 
 }

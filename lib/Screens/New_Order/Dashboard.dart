@@ -1,3 +1,4 @@
+import 'package:five_star_photo_framing/Screens/Track_Orders/Dashboard.dart';
 import 'package:five_star_photo_framing/models/DBHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -57,11 +58,14 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
   TextEditingController finalPriceController = TextEditingController();
   TextEditingController totalAmountController = TextEditingController();
   TextEditingController quantityController = TextEditingController(text: '1');
+  TextEditingController sellingPriceController = TextEditingController();
+
+  bool _isSellingPriceSameAsTotal = true;
 
   double totalAmount = 0.0;
   double pendingAmount = 0.0;
+  double sellingPriceAmount = 0.0;
 
-  bool _isFinalPriceChecked = true;
   List<String> _frameOptions = [];
 
   bool _isDropdownEnabled = true;
@@ -72,6 +76,13 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
   void initState() {
     super.initState();
     _loadFrames();
+
+    advanceController.addListener(calculatePendingAmount);
+    sellingPriceController.addListener(calculatePendingAmount);
+    heightController.addListener(calculateTotalAmount);
+    widthController.addListener(calculateTotalAmount);
+    quantityController.addListener(calculateTotalAmount);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_frameOptions.isNotEmpty) {
         setState(() {
@@ -87,8 +98,11 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
     List<Map<String, dynamic>> frameRecords = await DBHelperClass.instance.getAllRecords(DBHelperClass.TBLFrame);
 
     List<String> frames = frameRecords.map((record) {
-      return record[DBHelperClass.FrameSize] as String;
-    }).toList();
+      // Merge FrameSize and FrameColor
+      String size = record[DBHelperClass.FrameSize] as String;
+      String color = record[DBHelperClass.FrameColor] as String;
+      return '$size ($color)'; // Format as "Size (Color)"
+    }).toSet().toList();
 
     setState(() {
       _frameOptions = frames;
@@ -97,6 +111,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
       }
     });
   }
+
 
   void _updateFinalPrice(double price) {
     widget.onFinalPriceChanged(price);
@@ -107,6 +122,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
     double height = double.tryParse(heightController.text) ?? 0.0;
     double width = double.tryParse(widthController.text) ?? 0.0;
     int quantity = int.tryParse(quantityController.text) ?? 1;
+    sellingPriceAmount = double.tryParse(sellingPriceController.text) ?? 0.0;
 
     setState(() {
       double intermediateValue = (height * width) / 144;
@@ -137,7 +153,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
           ),
         );
       } else if (_selectedOption == 'Only Frame') {
-        if(_selectedFrame =="0.5"){
+        if(_selectedFrame =="0.5 (Gold)" || _selectedFrame =="0.5 (Black)"){
           totalAmount = intermediateValue * (7*7) * quantity;
           priceWidgets.add(
             Text(
@@ -149,7 +165,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
               ),
             ),
           );
-        }else if(_selectedFrame =="1.0"){
+        }else if(_selectedFrame =="1.0 (Black)" || _selectedFrame =="1.0 (Gold)" || _selectedFrame =="0.75 (Black)" || _selectedFrame =="0.75 (Gold)"){
           totalAmount = intermediateValue * (9*9) * quantity;
           priceWidgets.add(
             Text(
@@ -161,7 +177,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
               ),
             ),
           );
-        } else if(_selectedFrame =="1.5"){
+        } else if(_selectedFrame =="1.5 (Black)" || _selectedFrame =="1.5 (Gold)"){
           totalAmount = intermediateValue * (12*12) * quantity;
           priceWidgets.add(
             Text(
@@ -187,7 +203,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
           );
         }
       } else if (_selectedOption == 'Frame with Glass') {
-        if(_selectedFrame =="0.5"){
+        if(_selectedFrame =="0.5 (Gold)" || _selectedFrame =="0.5 (Black)"){
           totalAmount = (intermediateValue * 30 * quantity) + (intermediateValue * (7*7) * quantity);
           priceWidgets.add(
             Text(
@@ -209,7 +225,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
               ),
             ),
           );
-        }else if(_selectedFrame =="1.0"){
+        }else if(_selectedFrame =="1.0 (Black)" || _selectedFrame =="1.0 (Gold)" || _selectedFrame =="0.75 (Black)" || _selectedFrame =="0.75 (Gold)"){
           totalAmount = (intermediateValue * 30 * quantity) + (intermediateValue * (9*9) * quantity);
           priceWidgets.add(
             Text(
@@ -231,7 +247,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
               ),
             ),
           );
-        } else if(_selectedFrame =="1.5"){
+        } else if(_selectedFrame =="1.5 (Black)" || _selectedFrame =="1.5 (Gold)"){
           totalAmount = (intermediateValue * 30 * quantity) + (intermediateValue * (12*12) * quantity);
           priceWidgets.add(
             Text(
@@ -277,7 +293,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
           );
         }
       } else if (_selectedOption == 'Full Kit') {
-        if(_selectedFrame =="0.5"){
+        if(_selectedFrame =="0.5 (Gold)" || _selectedFrame =="0.5 (Black)"){
           totalAmount = (intermediateValue * 30 * quantity) + (intermediateValue * (7*7) * quantity) + (intermediateValue * (6.5*6.5) * quantity);
           priceWidgets.add(
             Text(
@@ -309,7 +325,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
               ),
             ),
           );
-        }else if(_selectedFrame =="1.0"){
+        }else if(_selectedFrame =="1.0 (Black)" || _selectedFrame =="1.0 (Gold)" || _selectedFrame =="0.75 (Black)" || _selectedFrame =="0.75 (Gold)"){
           totalAmount = (intermediateValue * 30 * quantity) + (intermediateValue * (9*9) * quantity)+ (intermediateValue * (6.5*6.5) * quantity);
           priceWidgets.add(
             Text(
@@ -341,7 +357,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
               ),
             ),
           );
-        } else if(_selectedFrame =="1.5"){
+        } else if(_selectedFrame =="1.5 (Black)" || _selectedFrame =="1.5 (Gold)"){
           totalAmount = (intermediateValue * 30 * quantity) + (intermediateValue * (12*12) * quantity)+ (intermediateValue * (6.5*6.5) * quantity);
           priceWidgets.add(
             Text(
@@ -414,15 +430,62 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
   }
 
   void calculatePendingAmount() {
-    double advanceAmount = double.tryParse(advanceController.text) ?? 0.0;
+    double advanceAmount = double.tryParse(advanceController.text) ?? 0.0; // Parse advance amount from text input
+    double sellingPriceAmount = double.tryParse(sellingPriceController.text) ?? 0.0; // Parse selling price from text input
     setState(() {
-      pendingAmount = totalAmount - advanceAmount;
-      if (_isFinalPriceChecked) {
+      if (_isSellingPriceSameAsTotal) {
+        // If checkbox is checked, Selling Price equals Total Price
+        pendingAmount = totalAmount - advanceAmount;
         finalPriceController.text = pendingAmount.toStringAsFixed(2);
-        _updateFinalPrice(pendingAmount);
+        sellingPriceController.text = totalAmount.toStringAsFixed(2); // Set Selling Price to Total Price
+      } else {
+        // If checkbox is not checked, Selling Price can differ from Total Price
+        pendingAmount = sellingPriceAmount - advanceAmount;
+        finalPriceController.text = pendingAmount.toStringAsFixed(2);
       }
+      _updateFinalPrice(double.tryParse(finalPriceController.text) ?? 0.0); // Ensure final price is updated correctly
     });
   }
+
+  Future<void> placeOrder() async {
+    RegExp regex = RegExp(r'(.+?) \((.+)\)');
+    Match? match = regex.firstMatch(_selectedFrame!);
+    String size = '';
+    String color = '';
+    int frameId = 0;
+    if (match != null) {
+      size = match.group(1) ?? '';
+      color = match.group(2) ?? '';
+    } else {
+      print('No match found');
+    }
+
+    frameId = await DBHelperClass.instance.getFrameIdBySizeAndColor(size, color);
+    int insertedId =await DBHelperClass.instance.insertRecord(
+      DBHelperClass.TBLOrders,
+      {
+        'ServiceType': _selectedOption,
+        'FrameIdFK': frameId,
+        'Width': widthController.text,
+        'Height': heightController.text,
+        'FinalPrice': finalPriceController.text,
+        'Quantity': quantityController.text,
+        'AdvancePrice': advanceController.text
+      },
+    );
+    if (insertedId > 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ManageOrders()), // Replace NewPage with your target page
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to Add Orders')),
+      );
+    }
+
+  }
+
 
 
   @override
@@ -532,16 +595,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
                   onChanged: (value) => calculatePendingAmount(),
                 ),
                 SizedBox(height: 16.h),
-                TextField(
-                  controller: finalPriceController,
-                  decoration: InputDecoration(
-                    labelText: 'Final Price',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  readOnly: true,
-                ),
-                SizedBox(height: 16.h),
+
                 TextField(
                   controller: totalAmountController,
                   decoration: InputDecoration(
@@ -550,6 +604,40 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
                   ),
                   keyboardType: TextInputType.number,
                   readOnly: true,
+                  enabled: _isSellingPriceSameAsTotal
+                ),
+                SizedBox(height: 16.h),
+                CheckboxListTile(
+                  title: Text("Selling Price same as Total"),
+                  value: _isSellingPriceSameAsTotal,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _isSellingPriceSameAsTotal = value ?? false;
+                      if (_isSellingPriceSameAsTotal) {
+                        sellingPriceController.text = totalAmount.toStringAsFixed(2);
+                      }
+                    });
+                  },
+                ),
+                SizedBox(height: 16.h),
+                TextField(
+                  controller: sellingPriceController,
+                  decoration: InputDecoration(
+                    labelText: 'Selling Price',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  enabled: !_isSellingPriceSameAsTotal,
+                ),
+                SizedBox(height: 16.h),
+                TextField(
+                    controller: finalPriceController,
+                    decoration: InputDecoration(
+                      labelText: 'Payable Amount',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    readOnly: true
                 ),
                 SizedBox(height: 16.h),
                 Column(
@@ -573,7 +661,7 @@ class _SingleOrderWidgetState extends State<SingleOrderWidget> {
                     SizedBox(width: 16.w),
                     ElevatedButton(
                       onPressed: () {
-                        // Handle save or submit action here
+                        placeOrder();
                       },
                       child: Text('Save'),
                     ),

@@ -1,4 +1,5 @@
 import 'package:five_star_photo_framing/Screens/Mirror_Stock/Dashboard.dart';
+import 'package:five_star_photo_framing/Screens/Track_Orders/Dashboard.dart';
 import 'package:five_star_photo_framing/Screens/UpdateData/Dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,7 +23,7 @@ class HomeScreen extends StatelessWidget {
       {'name': 'Photo Stock', 'route': PhotoStockPage(), 'icon': Icons.photo_library},
       {'name': 'Mirror Stock', 'route': MirrorStockPage(), 'icon': Icons.flip_camera_ios},
       {'name': 'Calculate Price', 'route': PhotoStockPage(), 'icon': Icons.analytics},
-      {'name': 'Track Orders', 'route': PhotoStockPage(), 'icon': Icons.task_rounded},
+      {'name': 'Track Orders', 'route': ManageOrders(), 'icon': Icons.task_rounded},
       {'name': 'Update Data', 'route': UpdateDataPage(), 'icon': Icons.query_stats},
     ];
 

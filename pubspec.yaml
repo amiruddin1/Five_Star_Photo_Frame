@@ -58,7 +58,7 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/logo.png" # Path to your icon image
+  image_path: "assets/logo_new.jfif" # Path to your icon image
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -73,6 +73,7 @@ flutter:
 
   assets:
     - assets/logo.png
+    - assets/logo_new.jfif
   fonts:
     - family: SourceSansPro
       fonts:

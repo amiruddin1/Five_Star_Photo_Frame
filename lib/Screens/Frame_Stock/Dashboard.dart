@@ -263,6 +263,18 @@ class _FrameStockPageState extends State<FrameStockPage> {
                             DataColumn(
                               label: Center(
                                 child: Text(
+                                  'ID',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: themeProvider.textColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Center(
+                                child: Text(
                                   'Name',
                                   style: TextStyle(
                                     fontSize: 16.sp,
@@ -324,6 +336,17 @@ class _FrameStockPageState extends State<FrameStockPage> {
                           rows: frames.map((frame) {
                             return DataRow(
                               cells: [
+                                DataCell(
+                                  Center(
+                                    child: Text(
+                                      frame['FrameId'].toString(),
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        color: themeProvider.textColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 DataCell(
                                   Center(
                                     child: Text(
